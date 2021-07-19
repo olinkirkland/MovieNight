@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:ui="ui.*"
+               creationComplete="onComplete(event)">
+
+    <fx:Style source="/assets/css/global.css"/>
+
+    <fx:Script><![CDATA[
+        import global.State;
+        import global.Util;
+
+        import mx.events.FlexEvent;
+
+        import net.Client;
+        import net.ClientMessageType;
+        import net.Message;
+        import net.Server;
+
+        import ui.Console;
+
+        private var server:Server;
+        private var client:Client;
+
+        private var state:State;
+
+        private function onComplete(event:FlexEvent):void
+        {
+            state = State.instance;
+
+            txtInput.addEventListener(KeyboardEvent.KEY_DOWN, function (keyboardEvent:KeyboardEvent):void
+            {
+                if (keyboardEvent.keyCode == Keyboard.ENTER && txtInput.text.length > 0)
+                {
+                    // Input
+                    command(txtInput.text);
+                    txtInput.text = "";
+                }
+            });
+
+            // Log network information
+            Console.log(Util.formatNetworkInfo(), "config");
+        }
+
+        private function command(str:String):void
+        {
+            // A Console command
+            Console.log(str, Console.INPUT);
+
+            var cmd:Array = str.split(" ");
+            if (cmd.length == 0)
+                return;
+
+            switch (cmd[0])
+            {
+                case "host":
+                    if (!server && !client)
+                    {
+                        client = new Client();
+                        server = new Server(client);
+
+                        client.connectToSelf(server);
+                    }
+                    break;
+                case "connect":
+                    if (!server && !client)
+                        client = new Client();
+                    client.connect(cmd.length > 1 ? cmd[1] : "127.0.0.1");
+                    break;
+                case "id":
+                    // Identify a user
+                    client.send(new Message(ClientMessageType.GET_ID));
+                    break;
+                case "party":
+                    // List the watch party
+                    client.send(new Message(ClientMessageType.GET_PARTY));
+                    break;
+                case "chat":
+                    // Send chat
+                    client.send(new Message(ClientMessageType.SEND_CHAT));
+                    break;
+                default:
+                    Console.log("'" + str + "' isn't a recognized command\nType 'help' for a list of commands", Console.ALERT);
+                    break;
+            }
+        }
+        ]]></fx:Script>
+
+    <s:HGroup width="100%"
+              height="100%"
+              padding="10">
+
+        <s:Scroller width="100%"
+                    height="100%"
+                    horizontalScrollPolicy="auto"
+                    verticalScrollPolicy="off">
+            <s:HGroup height="100%"
+                      gap="3">
+
+                <s:VGroup width="100%"
+                          height="100%"
+                          gap="3">
+                    <ui:Console id="console"
+                                width="100%"/>
+
+                    <s:TextInput id="txtInput"
+                                 width="100%"
+                                 focusAlpha="0"
+                                 skinClass="ui.skins.TextInputSkin"/>
+                </s:VGroup>
+
+            </s:HGroup>
+        </s:Scroller>
+
+    </s:HGroup>
+
+</s:Application>

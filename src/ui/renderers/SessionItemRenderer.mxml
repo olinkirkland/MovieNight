@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                autoDrawBackground="false"
+                width="100%"
+                height="100%"
+                creationComplete="onCreationComplete(event)">
+
+    <fx:Script>
+		<![CDATA[
+        import data.User;
+
+        import mx.events.FlexEvent;
+
+        import net.Session;
+
+        import ui.Color;
+        import ui.SessionWindow;
+
+        private var session:Session;
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            update();
+        }
+
+        override public function set data(value:Object):void
+        {
+            if (session)
+                session.removeEventListener(Event.CHANGE, onSessionChange);
+
+            session = value as Session;
+            if (!session)
+                return;
+
+            session.addEventListener(Event.CHANGE, onSessionChange);
+
+            if (initialized)
+                update();
+        }
+
+        private function onSessionChange(event:Event):void
+        {
+            update();
+        }
+
+        private function update():void
+        {
+            labelId.text = session.id;
+            labelIp.text = session.ip;
+
+            groupUser.visible = groupUser.includeInLayout = session.user != null;
+            if (session.user)
+            {
+                // There's a user
+                var user:User        = session.user;
+                labelUserName.text   = user.name;
+                labelUserId.text     = user.id;
+                labelAboutTitle.text = user.aboutTitle;
+                labelAboutBody.text  = user.aboutBody;
+                labelLevel.text      = "Level " + user.level + ", " + user.experience + "/" + user.levelExperience;
+                labelFriends.text    = user.friends.length + " friends";
+            }
+        }
+
+        private function onPopupClick(event:MouseEvent):void
+        {
+            var window:SessionWindow = new SessionWindow();
+            window.session           = session;
+            window.open();
+        }
+        ]]>
+	</fx:Script>
+
+
+    <s:Group width="100%"
+             height="100%">
+
+        <s:Rect width="100%"
+                height="100%">
+            <s:fill>
+                <s:SolidColor color="{Color.containerFill}" />
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke color="{Color.containerStroke}" />
+            </s:stroke>
+        </s:Rect>
+
+        <s:VGroup width="100%"
+                  height="100%"
+                  padding="10">
+
+                <s:VGroup width="100%"
+                          height="100%">
+                    <s:Label id="labelId"
+                             width="100%"
+                             fontSize="12" />
+
+                    <s:Label id="labelIp"
+                             width="100%"
+                             fontSize="12" />
+
+                    <s:VGroup id="groupUser"
+                              width="100%">
+                        <s:Label id="labelUserName"
+                                 width="100%" />
+                        <s:Label id="labelUserId"
+                                 width="100%"
+                                 color="{Color.bodySecondary}" />
+
+                        <s:Group width="100%">
+
+                            <s:Rect width="100%"
+                                    height="100%">
+                                <s:fill>
+                                    <s:SolidColor color="{Color.white}" />
+                                </s:fill>
+                            </s:Rect>
+
+                            <s:VGroup width="100%"
+                                      padding="5">
+                                <s:Label id="labelAboutTitle"
+                                         width="100%" />
+                                <s:Label id="labelAboutBody"
+                                         width="100%"
+                                         color="{Color.bodySecondary}" />
+                            </s:VGroup>
+
+                        </s:Group>
+
+                        <s:Label id="labelLevel"
+                                 width="100%" />
+                        <s:Label id="labelFriends"
+                                 width="100%" />
+                    </s:VGroup>
+
+                    <s:Button label="View in new window"
+                              click="onPopupClick(event)" />
+
+                </s:VGroup>
+
+        </s:VGroup>
+
+    </s:Group>
+
+</s:ItemRenderer>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<s:SparkButtonSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
+                   xmlns:s="library://ns.adobe.com/flex/spark"
+                   creationComplete="onCreationComplete(event)"
+                   autoIconManagement="false">
+
+    <fx:Metadata>
+		<![CDATA[
+        [HostComponent("spark.ui.components.Button")]
+        ]]>
+	</fx:Metadata>
+
+    <fx:Script><![CDATA[
+        import global.Color;
+        import global.Icons;
+
+        import mx.events.FlexEvent;
+
+        import ui.Color;
+
+        private function onCreationComplete(event:FlexEvent):void {
+            var t:ColorTransform = iconDisplay.transform.colorTransform;
+            t.color = Color.darkBody;
+            iconDisplay.transform.colorTransform = t;
+
+            if (Label(labelDisplay).text.length == 0)
+                Label(labelDisplay).includeInLayout = false;
+        }
+        ]]></fx:Script>
+
+    <s:states>
+        <s:State name="normal" />
+        <s:State name="disabled" />
+        <s:State name="down" />
+        <s:State name="over" />
+        <s:State name="up" />
+    </s:states>
+
+    <s:Group height="30">
+
+        <s:Rect width="100%"
+                height="100%"
+                radiusX="3"
+                radiusY="3">
+            <s:fill>
+                <s:SolidColor id="color"
+                              color="{Color.secondary}"
+                              alpha.normal="1"
+                              alpha.disabled=".5" />
+            </s:fill>
+        </s:Rect>
+
+        <s:Rect width="100%"
+                height="100%"
+                radiusX="3"
+                radiusY="3">
+            <s:fill>
+                <s:SolidColor color="{Color.black}"
+                              alpha.normal="0"
+                              alpha.disabled="0"
+                              alpha.up="0"
+                              alpha.over=".1"
+                              alpha.down=".3" />
+            </s:fill>
+        </s:Rect>
+
+        <s:HGroup height="100%"
+                  padding="5"
+                  paddingLeft="10"
+                  paddingRight="10"
+                  verticalAlign="middle"
+                  gap="5">
+
+            <s:BitmapImage id="iconDisplay"
+                           includeInLayout="{iconDisplay.source}"
+                           width="12"
+                           height="12"
+                           smooth="true" />
+            <s:Label id="labelDisplay"
+                     styleName="secondary" />
+
+        </s:HGroup>
+
+    </s:Group>
+
+</s:SparkButtonSkin>
