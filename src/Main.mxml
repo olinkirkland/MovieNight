@@ -2,11 +2,13 @@
 <s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
                xmlns:s="library://ns.adobe.com/flex/spark"
                xmlns:ui="ui.*"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
                creationComplete="onComplete(event)">
 
     <fx:Style source="/assets/css/global.css"/>
 
     <fx:Script><![CDATA[
+        import global.Icons;
         import global.State;
         import global.Util;
 
@@ -17,7 +19,10 @@
         import net.Message;
         import net.Server;
 
+        import spark.events.IndexChangeEvent;
+
         import ui.Console;
+        import ui.popups.InfoPopup;
 
         private var server:Server;
         private var client:Client;
@@ -28,13 +33,13 @@
         {
             state = State.instance;
 
-            txtInput.addEventListener(KeyboardEvent.KEY_DOWN, function (keyboardEvent:KeyboardEvent):void
+            inputConsole.addEventListener(KeyboardEvent.KEY_DOWN, function (keyboardEvent:KeyboardEvent):void
             {
-                if (keyboardEvent.keyCode == Keyboard.ENTER && txtInput.text.length > 0)
+                if (keyboardEvent.keyCode == Keyboard.ENTER && inputConsole.text.length > 0)
                 {
                     // Input
-                    command(txtInput.text);
-                    txtInput.text = "";
+                    command(inputConsole.text);
+                    inputConsole.text = "";
                 }
             });
 
@@ -60,6 +65,11 @@
                         server = new Server(client);
 
                         client.connectToSelf(server);
+
+                        var p:InfoPopup = new InfoPopup();
+                        p.header = "Server started";
+                        p.description = "Server started on port " + Util.PORT;
+                        PopupManager.open(p);
                     }
                     break;
                 case "connect":
@@ -77,12 +87,35 @@
                     break;
                 case "chat":
                     // Send chat
-                    client.send(new Message(ClientMessageType.SEND_CHAT));
+                    cmd.shift();
+                    client.send(new Message(ClientMessageType.SEND_CHAT, cmd.join(" ")));
                     break;
                 default:
                     Console.log("'" + str + "' isn't a recognized command\nType 'help' for a list of commands", Console.ALERT);
                     break;
             }
+        }
+
+        private function onChangeConnectionType(event:IndexChangeEvent):void
+        {
+            callLater(function ():void
+            {
+                focusManager.setFocus(inputAddress);
+            });
+        }
+
+        private function onClickConnect(event:MouseEvent):void
+        {
+            var p:InfoPopup = new InfoPopup();
+            p.header = "Connecting...";
+            p.description = "Trying to connect";
+            p.showConfirmButton = false;
+            PopupManager.open(p);
+        }
+
+        private function onClickStartServer(event:MouseEvent):void
+        {
+            command("host");
         }
         ]]></fx:Script>
 
@@ -90,28 +123,64 @@
               height="100%"
               padding="10">
 
-        <s:Scroller width="100%"
-                    height="100%"
-                    horizontalScrollPolicy="auto"
-                    verticalScrollPolicy="off">
-            <s:HGroup height="100%"
-                      gap="3">
+        <!--Connect-->
+        <s:VGroup width="100%"
+                  height="100%"
+                  horizontalAlign="center">
+            <s:BitmapImage source="{Icons.Logo}"/>
+            <s:Label text="Movie Night"/>
+            <s:ButtonBar dataProvider="{myViewStack}"
+                         change="onChangeConnectionType(event)"
+                         requireSelection="true"/>
+            <mx:ViewStack id="myViewStack"
+                          width="100%">
 
-                <s:VGroup width="100%"
-                          height="100%"
-                          gap="3">
-                    <ui:Console id="console"
-                                width="100%"/>
+                <s:NavigatorContent id="navConnect"
+                                    label="Connect"
+                                    width="100%">
+                    <s:VGroup width="100%"
+                              padding="10"
+                              horizontalAlign="center">
+                        <s:TextInput id="inputAddress"
+                                     width="200"
+                                     focusAlpha="0"/>
+                        <s:Button label="Connect"
+                                  enabled="{inputAddress.text.length > 0}"
+                                  click="onClickConnect(event)"/>
+                        <s:Label id="labelConnectInfo"/>
+                    </s:VGroup>
+                </s:NavigatorContent>
 
-                    <s:TextInput id="txtInput"
-                                 width="100%"
-                                 focusAlpha="0"
-                                 skinClass="ui.skins.TextInputSkin"/>
-                </s:VGroup>
+                <s:NavigatorContent id="navHost"
+                                    label="Host"
+                                    width="100%">
+                    <s:VGroup width="100%"
+                              padding="10"
+                              horizontalAlign="center">
+                        <s:Button label="Start server"
+                                  click="onClickStartServer(event)"/>
+                    </s:VGroup>
+                </s:NavigatorContent>
 
-            </s:HGroup>
-        </s:Scroller>
+            </mx:ViewStack>
+        </s:VGroup>
+
+        <!--Console-->
+        <s:VGroup width="100%"
+                  height="100%"
+                  gap="3">
+
+            <ui:Console id="console"
+                        width="100%"/>
+
+            <s:TextInput id="inputConsole"
+                         width="100%"
+                         focusAlpha="0"/>
+        </s:VGroup>
 
     </s:HGroup>
+
+    <ui:Modal width="100%"
+              height="100%"/>
 
 </s:Application>

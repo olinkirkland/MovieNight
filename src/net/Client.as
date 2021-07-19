@@ -82,7 +82,6 @@ package net
         {
             this.server = server;
             handleConnect(null);
-            send(new Message(ClientMessageType.GET_ID));
         }
 
         private function handleConnect(e:Event):void

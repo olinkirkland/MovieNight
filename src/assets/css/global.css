@@ -13,6 +13,13 @@ Fonts
     fontStyle: normal;
 }
 
+@font-face {
+    src: url("/assets/fonts/Ubuntu-Bold.ttf");
+    fontFamily: Ubuntu;
+    fontWeight: bold;
+    fontStyle: normal;
+}
+
 /*
 Components
  */
@@ -30,10 +37,18 @@ s|HScrollBar {
     track_color: #eeeeee;
 }
 
+s|Panel {
+    skinClass: ClassReference("ui.skins.PanelSkin");
+}
+
 s|Label {
     fontFamily: Ubuntu;
 }
 
 s|RichEditableText {
     fontFamily: Ubuntu;
+}
+
+s|TextInput {
+    skinClass: ClassReference("ui.skins.TextInputSkin");
 }

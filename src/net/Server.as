@@ -26,17 +26,6 @@ package net
             state = State.instance;
             state.party = new ArrayCollection();
 
-            // Load data from file
-            var file:File = File.applicationStorageDirectory.resolvePath("data.json");
-            if (!file.exists)
-            {
-                // No data yet, create an empty file
-                var fileStream:FileStream = new FileStream();
-                fileStream.open(file, FileMode.WRITE);
-                fileStream.writeUTFBytes(JSON.stringify({}));
-                fileStream.close();
-            }
-
             // Sessions start with selfClient as one of the sessions
             sessions = {};
             selfSession = new SelfSession();
@@ -119,7 +108,7 @@ package net
                     break;
                 case ClientMessageType.SEND_CHAT:
                     // Received a chat message from a user
-                    sendAll(m.type, m.data);
+                    sendAll(m.type, {text: m.data, id: s.id});
                     break;
                 default:
                     Console.log("Uncaught message type '" + m.type + "' received", Console.CONFIG);

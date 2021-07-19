@@ -8,6 +8,7 @@ package ui
         public static const yellow:uint = 0xedd04e;
         public static const green:uint  = 0x35db3d;
         public static const blue:uint   = 0x1e90ff;
+        public static const black:uint = 0x000000;
 
         // UI
         public static const primary:uint = 0x88C4F8;
