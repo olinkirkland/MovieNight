@@ -12,7 +12,10 @@
         import global.State;
         import global.Util;
 
+        import mx.collections.ArrayCollection;
+
         import mx.events.FlexEvent;
+        import mx.managers.ToolTipManager;
 
         import net.Client;
         import net.ClientMessageType;
@@ -22,7 +25,9 @@
         import spark.events.IndexChangeEvent;
 
         import ui.Console;
+        import ui.popups.AvatarPopup;
         import ui.popups.InfoPopup;
+        import ui.popups.InputPopup;
 
         private var server:Server;
         private var client:Client;
@@ -33,18 +38,32 @@
         {
             state = State.instance;
 
+            listParty.dataProvider = state.party;
+            listChat.dataProvider = state.messages;
+
+            // Tooltip setup
+            ToolTipManager.showDelay = 0;
+            ToolTipManager.toolTipClass = ToolTip;
+
             inputConsole.addEventListener(KeyboardEvent.KEY_DOWN, function (keyboardEvent:KeyboardEvent):void
             {
                 if (keyboardEvent.keyCode == Keyboard.ENTER && inputConsole.text.length > 0)
                 {
-                    // Input
+                    // Input console
                     command(inputConsole.text);
                     inputConsole.text = "";
                 }
             });
 
-            // Log network information
-            Console.log(Util.formatNetworkInfo(), "config");
+            inputChat.addEventListener(KeyboardEvent.KEY_DOWN, function (keyboardEvent:KeyboardEvent):void
+            {
+                if (keyboardEvent.keyCode == Keyboard.ENTER && inputChat.text.length > 0)
+                {
+                    // Input chat
+                    client.send(new Message(ClientMessageType.SEND_CHAT, inputChat.text));
+                    inputChat.text = "";
+                }
+            });
         }
 
         private function command(str:String):void
@@ -58,6 +77,9 @@
 
             switch (cmd[0])
             {
+                case "net":
+                    Console.log(Util.formatNetworkInfo(), "config");
+                    break;
                 case "host":
                     if (!server && !client)
                     {
@@ -70,11 +92,16 @@
                         p.header = "Server started";
                         p.description = "Server started on port " + Util.PORT;
                         PopupManager.open(p);
+
+                        startApp();
                     }
                     break;
                 case "connect":
                     if (!server && !client)
+                    {
                         client = new Client();
+                        client.addEventListener(Event.CONNECT, onConnect);
+                    }
                     client.connect(cmd.length > 1 ? cmd[1] : "127.0.0.1");
                     break;
                 case "id":
@@ -96,6 +123,18 @@
             }
         }
 
+        private function onConnect(event:Event):void
+        {
+            PopupManager.close();
+            startApp();
+        }
+
+        private function startApp():void
+        {
+            groupConnect.visible = groupConnect.includeInLayout = false;
+            groupApp.visible = groupApp.includeInLayout = true;
+        }
+
         private function onChangeConnectionType(event:IndexChangeEvent):void
         {
             callLater(function ():void
@@ -107,15 +146,43 @@
         private function onClickConnect(event:MouseEvent):void
         {
             var p:InfoPopup = new InfoPopup();
-            p.header = "Connecting...";
-            p.description = "Trying to connect";
+            p.header = "Connecting";
+            p.description = "Connecting to '" + inputAddress.text + "' on port " + Util.PORT;
             p.showConfirmButton = false;
             PopupManager.open(p);
+
+            command("connect " + inputAddress.text);
         }
 
         private function onClickStartServer(event:MouseEvent):void
         {
             command("host");
+        }
+
+        private function onClickEditName(event:MouseEvent):void
+        {
+            var p:InputPopup = new InputPopup();
+            p.header = "Edit name";
+            p.description = "Enter a new name.";
+            p.callbackConfirm = editName;
+            PopupManager.open(p);
+        }
+
+        private function editName(newName:String):void
+        {
+            client.send(new Message(ClientMessageType.SET_NAME, newName));
+        }
+
+        private function onClickEditAvatar(event:MouseEvent):void
+        {
+            var p:AvatarPopup = new AvatarPopup();
+            p.callbackConfirm = editAvatar;
+            PopupManager.open(p);
+        }
+
+        private function editAvatar(newAvatar:String):void
+        {
+            client.send(new Message(ClientMessageType.SET_AVATAR, newAvatar));
         }
         ]]></fx:Script>
 
@@ -124,11 +191,13 @@
               padding="10">
 
         <!--Connect-->
-        <s:VGroup width="100%"
+        <s:VGroup id="groupConnect"
+                  width="400"
                   height="100%"
                   horizontalAlign="center">
-            <s:BitmapImage source="{Icons.Logo}"/>
-            <s:Label text="Movie Night"/>
+            <s:VGroup padding="40">
+                <s:BitmapImage source="{Icons.Logo}"/>
+            </s:VGroup>
             <s:ButtonBar dataProvider="{myViewStack}"
                          change="onChangeConnectionType(event)"
                          requireSelection="true"/>
@@ -144,8 +213,8 @@
                         <s:TextInput id="inputAddress"
                                      width="200"
                                      focusAlpha="0"/>
+                        <s:CheckBox label="Remember"/>
                         <s:Button label="Connect"
-                                  enabled="{inputAddress.text.length > 0}"
                                   click="onClickConnect(event)"/>
                         <s:Label id="labelConnectInfo"/>
                     </s:VGroup>
@@ -164,6 +233,48 @@
 
             </mx:ViewStack>
         </s:VGroup>
+
+        <s:VGroup id="groupApp"
+                  width="400"
+                  includeInLayout="false"
+                  visible="false"
+                  verticalAlign="middle">
+
+            <s:Panel width="100%">
+                <s:VGroup width="100%">
+                    <s:Label text="Profile and Party"/>
+                    <s:HGroup width="100%">
+                        <s:Button label="Edit Name"
+                                  click="onClickEditName(event)"/>
+                        <s:Button label="Choose Avatar"
+                                  click="onClickEditAvatar(event)"/>
+                        <s:List id="listParty"
+                                width="100%"
+                                useVirtualLayout="false"
+                                itemRenderer="ui.renderers.PartyMemberItemRenderer"
+                                borderVisible="false">
+                            <s:layout>
+                                <s:HorizontalLayout gap="5"
+                                                    horizontalAlign="right"/>
+                            </s:layout>
+                        </s:List>
+                    </s:HGroup>
+                    <s:List id="listChat"
+                            width="100%"
+                            height="200"
+                            itemRenderer="ui.renderers.ChatItemRenderer"
+                            horizontalScrollPolicy="off"
+                            borderVisible="false"
+                            contentBackgroundAlpha="0"/>
+
+                    <s:TextInput id="inputChat"
+                                 width="100%"
+                                 focusAlpha="0"/>
+                </s:VGroup>
+            </s:Panel>
+
+        </s:VGroup>
+
 
         <!--Console-->
         <s:VGroup width="100%"

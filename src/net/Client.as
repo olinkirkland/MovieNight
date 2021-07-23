@@ -11,6 +11,7 @@ package net
     import signal.SignalEvent;
 
     import ui.Console;
+    import ui.popups.InfoPopup;
 
     /**
      * ...
@@ -75,6 +76,11 @@ package net
                 this.address = address;
 
             connected = false;
+
+            Console.log("Connecting to '" + this.address + "' on port " + Util.PORT
+            )
+            ;
+
             socket.connect(this.address, Util.PORT);
         }
 
@@ -103,12 +109,18 @@ package net
             Console.log("You were disconnected from " + address);
         }
 
-        public function handleError(e:IOErrorEvent):void
+        public function handleError(e:ErrorEvent):void
         {
             // Couldn't connect to server, retrying
             //connect();
 
+            var p:InfoPopup = new InfoPopup();
+            p.header = e.type;
+            p.description = e.text;
+            PopupManager.open(p);
+
             Console.log(e.text);
+            Console.log(e.toString());
         }
 
         private function socketDataHandler(e:ProgressEvent):void

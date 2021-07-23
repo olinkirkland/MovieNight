@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<popups:Popup xmlns:fx="http://ns.adobe.com/mxml/2009"
+              xmlns:s="library://ns.adobe.com/flex/spark"
+              xmlns:popups="ui.popups.*"
+              width="320">
+
+    <fx:Script><![CDATA[
+        import global.Avatar;
+        import global.State;
+
+        import mx.collections.ArrayCollection;
+
+        import mx.events.FlexEvent;
+
+        public var callbackConfirm:Function = null;
+
+        override public function onCreationComplete(event:FlexEvent):void
+        {
+            super.onCreationComplete(event);
+
+            // Show avatars
+            listAvatars.dataProvider = new ArrayCollection(Avatar.avatars);
+
+            // Select current avatar
+            for each (var avatar:Object in listAvatars.dataProvider)
+                if (avatar.name == State.instance.getMe().avatar)
+                    listAvatars.selectedItem = avatar;
+        }
+
+        private function cancelAndClose(event:MouseEvent):void
+        {
+            close();
+        }
+
+        private function confirmAndClose(event:MouseEvent):void
+        {
+            if (callbackConfirm != null) callbackConfirm.apply(this, [listAvatars.selectedItem.name]);
+            close();
+        }
+        ]]>
+    </fx:Script>
+
+    <s:VGroup gap="10"
+              width="100%">
+
+        <s:HGroup width="100%"
+                  verticalAlign="middle">
+            <s:Label text="Change avatar"
+                     width="100%"
+                     fontWeight="bold"/>
+        </s:HGroup>
+
+        <s:VGroup width="100%">
+            <s:Label text="Pick a new avatar"
+                     width="100%"/>
+            <s:List id="listAvatars"
+                    width="100%"
+                    requireSelection="true"
+                    useVirtualLayout="false"
+                    itemRenderer="ui.renderers.AvatarItemRenderer"
+                    borderVisible="false">
+                <s:layout>
+                    <s:TileLayout columnAlign="justifyUsingGap"/>
+                </s:layout>
+            </s:List>
+        </s:VGroup>
+
+        <s:HGroup width="100%"
+                  horizontalAlign="right">
+            <s:Button id="buttonCancel"
+                      label="Cancel"
+                      click="cancelAndClose(event)"/>
+            <s:Button id="buttonConfirm"
+                      label="Ok"
+                      click="confirmAndClose(event)"/>
+        </s:HGroup>
+
+    </s:VGroup>
+</popups:Popup>

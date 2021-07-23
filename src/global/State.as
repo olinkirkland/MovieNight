@@ -17,7 +17,8 @@ package global
         private var signalManager:Signal;
 
         public var id:String;
-        public var party:ArrayCollection = new ArrayCollection();
+        public var party:ArrayCollection;
+        public var messages:ArrayCollection;
 
         public function State()
         {
@@ -28,6 +29,18 @@ package global
             // Signal
             signalManager = Signal.instance;
             signalManager.addEventListener(SignalEvent.SIGNAL, handleSignal);
+
+            party = new ArrayCollection();
+            messages = new ArrayCollection();
+        }
+
+        public function getMe():Object
+        {
+            var me:Object = null;
+            for each (var user:Object in party)
+                if (user.id == id)
+                    me = user;
+            return me;
         }
 
         public static function get instance():State
@@ -48,12 +61,22 @@ package global
                     party.source = payload as Array;
                     var str:String = "==== Party ====";
                     for each (var partyMember:Object in State.instance.party)
-                        str += (partyMember.id == id) ? "\nme -> " + partyMember.id : "\n" + partyMember.id;
+                    {
+                        str += "\n";
+                        if (partyMember.id == id)
+                            str += "me -> ";
+                        if (partyMember.name)
+                            str += "(" + partyMember.name + ")";
+                        str += " " + partyMember.id;
+                    }
                     Console.log(str);
                     break;
                 case ServerMessageType.UPDATE_ID:
                     id = payload as String;
                     Console.log("id: " + id);
+                    break;
+                case ServerMessageType.CHAT:
+                    messages.addItem(payload);
                     break;
                 default:
                     break;

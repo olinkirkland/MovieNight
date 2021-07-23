@@ -1,9 +1,7 @@
 package net
 {
 
-    import flash.events.Event;
     import flash.net.*;
-    import flash.utils.setTimeout;
 
     import ui.Console;
 

@@ -108,10 +108,5 @@ package net
                 }
             }, 50);
         }
-
-        public function toPartyMember():Object
-        {
-            return {id: id};
-        }
     }
 }

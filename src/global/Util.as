@@ -18,7 +18,7 @@ package global
     public class Util
     {
         // Server Address
-        public static const PORT:int = 43699;
+        public static const PORT:int = 21025;
 
         /**
          * Icons

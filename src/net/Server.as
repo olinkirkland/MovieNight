@@ -2,13 +2,12 @@ package net
 {
 
     import flash.events.*;
-    import flash.filesystem.*;
     import flash.net.*;
 
+    import global.Avatar;
     import global.State;
     import global.Util;
 
-    import mx.collections.ArrayCollection;
     import mx.utils.UIDUtil;
 
     import ui.Console;
@@ -24,14 +23,13 @@ package net
         public function Server(selfClient:Client):void
         {
             state = State.instance;
-            state.party = new ArrayCollection();
 
             // Sessions start with selfClient as one of the sessions
             sessions = {};
             selfSession = new SelfSession();
             selfSession.selfClient = selfClient;
             sessions[UIDUtil.createUID()] = selfSession;
-            state.party.addItem(selfSession.toPartyMember());
+            state.party.addItem({id: selfSession.id, name: "Anon-" + selfSession.id.substr(0, 3).toUpperCase(), avatar: Avatar.avatars[0].name});
 
             // Start the server
             server = new ServerSocket();
@@ -57,7 +55,7 @@ package net
             // When a Session that's connected is confirmed (not a "policy connect")
             var session:Session = (e.target as Session);
             sessions[session.id] = session;
-            state.party.addItem(session.toPartyMember());
+            state.party.addItem({id: session.id, name: "Anon-" + session.id.substr(0, 3).toUpperCase(), avatar: Avatar.avatars[0].name});
 
             session.removeEventListener(Session.CONFIRM, handleConfirm);
 
@@ -92,6 +90,7 @@ package net
             // Handle messages from all sessions
             Console.log("* [received] " + JSON.stringify(m));
 
+            var i:int;
             switch (m.type)
             {
                 case ClientMessageType.GET_PARTY:
@@ -105,10 +104,25 @@ package net
                 case ClientMessageType.CONFIRM_CONNECTION:
                     // Connection confirmed
                     s.send(new Message(ServerMessageType.UPDATE_ID, s.id));
+                    s.send(new Message(ServerMessageType.UPDATE_PARTY, state.party.source));
                     break;
                 case ClientMessageType.SEND_CHAT:
                     // Received a chat message from a user
                     sendAll(m.type, {text: m.data, id: s.id});
+                    break;
+                case ClientMessageType.SET_NAME:
+                    // Change a client name
+                    for (i = 0; i < state.party.length; i++)
+                        if (state.party[i].id == s.id)
+                            state.party[i].name = m.data;
+                    sendAll(ServerMessageType.UPDATE_PARTY, state.party.source);
+                    break;
+                case ClientMessageType.SET_AVATAR:
+                    // Change a client avatar
+                    for (i = 0; i < state.party.length; i++)
+                        if (state.party[i].id == s.id)
+                            state.party[i].avatar = m.data;
+                    sendAll(ServerMessageType.UPDATE_PARTY, state.party.source);
                     break;
                 default:
                     Console.log("Uncaught message type '" + m.type + "' received", Console.CONFIG);

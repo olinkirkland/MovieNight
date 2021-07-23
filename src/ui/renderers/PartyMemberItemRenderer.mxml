@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                autoDrawBackground="false"
+                height="100%">
+
+    <fx:Script>
+		<![CDATA[
+        import global.Avatar;
+        import global.Icons;
+        import global.State;
+
+        import ui.Color;
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            if (!data)
+                return;
+
+            var id:String = data.id;
+            var name:String = data.name;
+            var avatar:String = data.avatar;
+
+            groupContent.toolTip = name;
+            groupContent.toolTip += State.instance.id == id ? " (Me)" : "";
+            image.source = Avatar.getAvatarByName(avatar).icon;
+
+            //imageBookmark.visible = State.instance.id == id;
+        }
+        ]]>
+	</fx:Script>
+
+
+    <s:Group id="groupContent">
+
+        <s:Rect width="100%"
+                height="100%">
+            <s:fill>
+                <s:SolidColor color="{Color.white}"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:BitmapImage id="image"
+                       smooth="true"
+                       width="32"
+                       height="32"/>
+
+        <s:Spacer width="38"/>
+
+    </s:Group>
+
+</s:ItemRenderer>
